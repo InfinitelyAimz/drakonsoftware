@@ -22,13 +22,65 @@ document.querySelectorAll('[data-service]').forEach(link => link.addEventListene
   form.elements.service.value = link.dataset.service;
 }));
 form.querySelectorAll('[name=channel]').forEach(radio => radio.addEventListener('change', () => {
-  submitButton.textContent = form.elements.channel.value === 'email' ? 'Continue to email' : 'Continue to WhatsApp';
+  submitButton.textContent = form.elements.channel.value === 'email' ? 'Send email request' : 'Continue to WhatsApp';
   form.querySelector('.form-status').textContent = '';
 }));
-form.addEventListener('submit', event => {
+form.addEventListener('submit', async event => {
   event.preventDefault();
-  if (!form.reportValidity()) return;
+  if (submitButton.disabled || !form.reportValidity()) return;
   const data = new FormData(form);
+  if (data.get('_honey')) return;
+  const status = form.querySelector('.form-status');
+  status.classList.remove('error');
+  const channel = data.get('channel');
+  if (channel === 'email') {
+    submitButton.disabled = true;
+    submitButton.textContent = 'Sending your request…';
+    form.setAttribute('aria-busy', 'true');
+    status.textContent = 'Sending your enquiry. Please keep this page open.';
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 25000);
+    try {
+      const response = await fetch('https://formsubmit.co/ajax/drakonsoftwaresolutions@gmail.com', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json', 'Accept': 'application/json'},
+        signal: controller.signal,
+        body: JSON.stringify({
+          name: data.get('name').trim(),
+          email: data.get('email').trim(),
+          phone: data.get('phone').trim() || 'Not supplied',
+          service: data.get('service'),
+          message: data.get('details').trim(),
+          _subject: 'Drakon quote enquiry: ' + data.get('service'),
+          _template: 'table',
+          _honey: ''
+        })
+      });
+      const result = await response.json();
+      if (!response.ok || !(result.success === true || result.success === 'true')) {
+        throw new Error('Email service did not accept the enquiry');
+      }
+      // Activation is not an enquiry delivery confirmation.
+      if (/activat|confirm.*email|verify.*email/i.test(result.message || '')) {
+        status.classList.add('error');
+        status.textContent = 'Email delivery is awaiting activation. Please use WhatsApp or call 072 524 3008 for now. Your details are still here.';
+      } else {
+        status.textContent = 'Your request has been submitted. Thank you — Drakon will contact you using the details you provided.';
+        form.reset();
+      }
+    } catch (error) {
+      status.classList.add('error');
+      status.textContent = error.name === 'AbortError'
+        ? 'We couldn’t confirm whether your request was sent. Please contact us on WhatsApp or call 072 524 3008. Your details are still here.'
+        : 'Your request could not be confirmed. Please try again or contact us on WhatsApp or call 072 524 3008. Your details are still here.';
+    } finally {
+      clearTimeout(timeout);
+      form.removeAttribute('aria-busy');
+      submitButton.disabled = false;
+      submitButton.textContent = form.elements.channel.value === 'email' ? 'Send email request' : 'Continue to WhatsApp';
+    }
+    return;
+  }
   const message = [
     'Hello Drakon, I would like to discuss a quote.', '',
     `Name: ${data.get('name').trim()}`,
@@ -37,18 +89,13 @@ form.addEventListener('submit', event => {
     `Service: ${data.get('service')}`, '',
     data.get('details').trim()
   ].join('\n');
-  const channel = data.get('channel');
-  const destination = channel === 'email'
-    ? `mailto:drakonsoftwaresolutions@gmail.com?subject=${encodeURIComponent('Quote enquiry: ' + data.get('service'))}&body=${encodeURIComponent(message)}`
-    : `https://wa.me/27725243008?text=${encodeURIComponent(message)}`;
-  if (channel === 'email') window.location.href = destination;
-  else window.open(destination, '_blank', 'noopener,noreferrer');
-  const status = form.querySelector('.form-status');
-  status.replaceChildren(document.createTextNode('Review and send your message in ' + (channel === 'email' ? 'your email app.' : 'WhatsApp.') + ' If it didn’t open, '));
+  const destination = `https://wa.me/27725243008?text=${encodeURIComponent(message)}`;
+  window.open(destination, '_blank', 'noopener,noreferrer');
+  status.replaceChildren(document.createTextNode('Review and send your message in WhatsApp. If it didn’t open, '));
   const retry = document.createElement('a');
   retry.href = destination;
   retry.textContent = 'open your enquiry here';
-  if (channel !== 'email') { retry.target = '_blank'; retry.rel = 'noopener noreferrer'; }
+  retry.target = '_blank'; retry.rel = 'noopener noreferrer';
   retry.style.textDecoration = 'underline';
   status.append(retry, document.createTextNode('. Your enquiry has not been sent automatically.'));
 });
