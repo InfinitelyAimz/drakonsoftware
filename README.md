@@ -26,4 +26,6 @@ Logo and business branding belong to Drakon Software & IT Solutions.
 
 ## Dragon animation
 
-`dragon.js` animates the exact supplied dragon artwork in the hero, with the lettering excluded by its drawing bounds. No replacement dragon image is generated. The animation includes a pause/play button, reduced-motion support, and stops rendering while offscreen or the browser tab is hidden.
+`dragon3d.js` renders a custom 3D interpretation of the brand dragon: gold horns and armour, green-to-teal-to-blue scales, articulated serpentine body and claws. It starts automatically. Tap/click the dragon, or focus it and press Space/Enter, to pause or resume; there is no separate visible control. Rendering stops when offscreen or the page is hidden. WebGL failures preserve the original logo artwork as a fallback.
+
+Three.js 0.187.0 is bundled locally. Its MIT license is included in `THREE-LICENSE.txt`.
