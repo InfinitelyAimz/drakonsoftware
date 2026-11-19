@@ -8,3 +8,18 @@
 .brand-lockup{display:flex;align-items:center;gap:12px;flex-shrink:0}.header-logo{display:block;position:relative;width:62px;height:62px;overflow:hidden;mix-blend-mode:lighten}.header-logo img{position:absolute;width:160%;height:auto;max-width:none;left:-30%;top:-24%}.spam-trap{display:none!important}.submit:disabled{cursor:wait;opacity:.65;transform:none}.form-status.error{color:#f2bb92}@media(max-width:700px){.brand-lockup{gap:8px}.header-logo{width:47px;height:47px}.header .wordmark{font-size:21px}.header .wordmark span{font-size:8px}.header{gap:12px}}
 
 .quote-form .radio[hidden]{display:none}.header-logo{clip-path:inset(0 0 5px 0)}
+
+/* The hero uses only the dragon from the supplied artwork. */
+.hero-brand.dragon-stage{border-radius:12px;overflow:hidden;isolation:isolate;mix-blend-mode:normal;background:radial-gradient(ellipse at 55% 45%,#12372b44,transparent 65%);aspect-ratio:1;max-width:540px}
+.dragon-stage:before{display:none}
+.dragon-canvas{display:block;position:absolute;inset:0;width:100%;height:100%;mix-blend-mode:lighten;opacity:0}
+.dragon-ready .dragon-canvas{opacity:1}
+.dragon-fallback{position:absolute;width:64%;height:58%;left:18%;top:18%;overflow:hidden;mix-blend-mode:lighten}
+.dragon-fallback img{position:absolute!important;width:153.85%!important;height:auto!important;max-width:none;left:-26.15%;top:-25.42%;border-radius:0!important}
+.dragon-ready .dragon-fallback{visibility:hidden}
+.motion-toggle{position:absolute;bottom:12px;right:14px;background:#101a15dd;border:1px solid #3a5144;color:#b7c7bc;border-radius:4px;padding:7px 12px;font-size:12px;cursor:pointer;z-index:2}
+.motion-toggle:hover{color:var(--gold);border-color:var(--gold)}
+.motion-toggle[hidden]{display:none}
+@media(max-width:700px){.hero-brand.dragon-stage{max-width:360px}.motion-toggle{bottom:5px;right:8px}}
+
+.hero-brand.dragon-stage{background-color:var(--bg)}

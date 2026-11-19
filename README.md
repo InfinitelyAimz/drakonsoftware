@@ -23,3 +23,7 @@ Edit the page, styles or script and commit to `main`. GitHub Pages publishes the
 - Email: drakonsoftwaresolutions@gmail.com
 
 Logo and business branding belong to Drakon Software & IT Solutions.
+
+## Dragon animation
+
+`dragon.js` animates the exact supplied dragon artwork in the hero, with the lettering excluded by its drawing bounds. No replacement dragon image is generated. The animation includes a pause/play button, reduced-motion support, and stops rendering while offscreen or the browser tab is hidden.
