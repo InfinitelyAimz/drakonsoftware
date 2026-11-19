@@ -11,7 +11,7 @@ Business website for Drakon Software & IT Solutions.
 
 This is a static website with no build step or dependencies. GitHub Pages can publish it from the `main` branch and the `/(root)` folder. The `.nojekyll` file keeps the files served directly.
 
-Email enquiries are submitted directly to FormSubmit and routed to drakonsoftwaresolutions@gmail.com. FormSubmit requires a one-time activation email before delivery starts. The form includes a honeypot, a sending state, timeout/error handling, and a success message only after the service accepts the request. WhatsApp remains available and prepares a message for the visitor to review and send. No email passwords or API secrets are stored in the website. The direct email link still opens the visitor’s email app.
+Direct email integration is prepared for Formspree. Set the verified form endpoint in the quote form’s `data-email-endpoint` attribute in `index.html` to enable Email as the default option. Until an endpoint is configured, visitors use the working WhatsApp form or the direct email contact link. Form submissions include a honeypot, sending state, timeout/error handling and service-confirmed success. No email passwords or API secrets belong in the website.
 
 ## Making changes
 

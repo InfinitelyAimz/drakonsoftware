@@ -6,3 +6,5 @@
 .hero-brand:before{inset:0}@media(max-width:700px){input:not([type=radio]),select,textarea{font-size:16px}.hero-brand{min-width:0}}
 
 .brand-lockup{display:flex;align-items:center;gap:12px;flex-shrink:0}.header-logo{display:block;position:relative;width:62px;height:62px;overflow:hidden;mix-blend-mode:lighten}.header-logo img{position:absolute;width:160%;height:auto;max-width:none;left:-30%;top:-24%}.spam-trap{display:none!important}.submit:disabled{cursor:wait;opacity:.65;transform:none}.form-status.error{color:#f2bb92}@media(max-width:700px){.brand-lockup{gap:8px}.header-logo{width:47px;height:47px}.header .wordmark{font-size:21px}.header .wordmark span{font-size:8px}.header{gap:12px}}
+
+.quote-form .radio[hidden]{display:none}.header-logo{clip-path:inset(0 0 5px 0)}
