@@ -29,19 +29,23 @@ Logo and business branding belong to Drakon Software & IT Solutions.
 ### 3D model review
 
 `dragon-review.html` is a separate, unlinked model review page with side, front,
-back, three-quarter and head views, drag rotation, keyboard controls and zoom.
-`dragon-model.js` builds the original volumetric V2 interpretation of the supplied
+back, three-quarter, head, front-face and fin-detail views, drag rotation,
+keyboard controls and zoom.
+`dragon-model.js` builds the original volumetric V3 interpretation of the supplied
 `drakon-swimmer.png` artwork. The unseen front and back are interpreted, and the
 model is static and unrigged for likeness review before animation. It does not
 replace the homepage's existing animation.
 
-`drakon-model-v2.glb` is the current downloadable glTF 2.0 binary model;
-`drakon-model-v1.glb` retains the first model. Rebuild the current version with
-`node export-dragon.mjs` after editing the model source. V2 follows the reference
-with a hooked muzzle, narrow eyes, swept crown and cheek blades, broader belly
-plates, curved shoulder fins, and a layered cobalt/teal mane. Its emerald, blue
-and warm gold materials use softer studio lighting to retain saturated colours.
-The model uses 10 material batches and 72,340 triangles. Three.js and its included license
+`drakon-model-v3.glb` is the current downloadable glTF 2.0 binary model;
+V1 and V2 downloads retain the earlier models. Rebuild the current version with
+`node export-dragon.mjs` after editing the model source. V3 adds forward-canted
+sculpted eye sockets, a broader forehead, muzzle, nostrils and orbital rims.
+The fins use subdivided closed surfaces with curved camber and tapered edges;
+the gold margins are vertex colours on the same surface, rather than stacked
+extruded inlays. The dorsal mane has a rounded teardrop cross-section. Mirrored
+parts have their triangle winding corrected when baking the exported model.
+Its emerald, blue and warm gold materials retain the V2 palette and lighting.
+The model uses 11 material batches and 82,840 triangles. Three.js and its included license
 are shared with the existing site.
 
 `dragon-art.js` animates the supplied long dragon image (`drakon-swimmer.png`) along a flexible spine: the head steers as one rigid region, the body follows with a delay, and stronger S-shaped waves travel toward the tail, with gentle depth changes. The image is preserved as supplied; no substitute model is used. The original logo remains in the header. The animation starts automatically; tap/click the dragon or use Enter/Space to pause and resume. There is no separate visible control. Rendering stops offscreen and when the tab is hidden. The supplied image remains visible if WebGL is unavailable.

@@ -1,5 +1,5 @@
 import * as THREE from './three.module.min.js';
-import {createDragonModel,mergeDragonParts} from './dragon-model.js?v=2';
+import {createDragonModel,mergeDragonParts} from './dragon-model.js?v=3';
 const canvas=document.querySelector('canvas'),loading=document.querySelector('#loading');
 try {
  const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=.95;
@@ -11,8 +11,8 @@ try {
  const pmrem=new THREE.PMREMGenerator(renderer),env=pmrem.fromScene(studio,.1);scene.environment=env.texture;scene.environmentIntensity=.4;pmrem.dispose();
  const dragon=mergeDragonParts(createDragonModel());scene.add(dragon);
  let yaw=.35,pitch=.14,distance=14,target=new THREE.Vector3(-.2,0,0),drag=null;
- const presets={three:[.35,.14,14,[-.2,0,0],'Three-quarter view'],side:[0,0,14,[-.2,0,0],'Side view'],front:[Math.PI/2,.05,9,[0,.15,0],'Front view'],back:[-Math.PI/2,.1,9,[0,.15,0],'Back view'],head:[.55,.14,5.2,[2.65,1.1,0],'Head detail']};
- function draw(){const box=canvas.getBoundingClientRect();camera.aspect=box.width/box.height;camera.updateProjectionMatrix();const responsive=box.width<650&&distance>9?1.45:1;camera.position.set(target.x+Math.sin(yaw)*Math.cos(pitch)*distance*responsive,target.y+Math.sin(pitch)*distance*responsive,target.z+Math.cos(yaw)*Math.cos(pitch)*distance*responsive);camera.lookAt(target);renderer.render(scene,camera);}
+ const presets={three:[.35,.14,14,[-.2,0,0],'Three-quarter view'],side:[0,0,14,[-.2,0,0],'Side view'],front:[Math.PI/2,.05,9.5,[0,.15,0],'Front view'],back:[-Math.PI/2,.1,9.5,[0,.15,0],'Back view'],head:[.55,.14,5.2,[2.65,1.1,0],'Head detail'],face:[Math.PI/2,.08,3.15,[2.85,1.13,0],'Front face detail'],fins:[.3,-.48,5.6,[.95,-.38,0],'Fin underside detail']};
+ function draw(){const box=canvas.getBoundingClientRect();camera.aspect=box.width/box.height;camera.updateProjectionMatrix();const responsive=box.width<650?1+.45*Math.cos(yaw)**2*THREE.MathUtils.smoothstep(distance,4,14):1;camera.position.set(target.x+Math.sin(yaw)*Math.cos(pitch)*distance*responsive,target.y+Math.sin(pitch)*distance*responsive,target.z+Math.cos(yaw)*Math.cos(pitch)*distance*responsive);camera.lookAt(target);renderer.render(scene,camera);}
  function custom(){document.querySelectorAll('[data-view]').forEach(b=>b.setAttribute('aria-pressed','false'));document.querySelector('#view-label').textContent='Free view';}
  document.querySelectorAll('[data-view]').forEach(b=>b.addEventListener('click',()=>{const p=presets[b.dataset.view];[yaw,pitch,distance]=p;target.set(...p[3]);document.querySelector('#view-label').textContent=p[4];document.querySelectorAll('[data-view]').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));draw();}));
  const pointers=new Map();let pinchDistance=null;

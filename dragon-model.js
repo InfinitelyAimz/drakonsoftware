@@ -1,9 +1,9 @@
 import * as THREE from './three.module.min.js';
 
-// Drakon V2: a volumetric interpretation of the supplied side artwork.
+// Drakon V3: sculpted front face and curved, solid fins.
 // X points toward the nose, Y is up, Z is the dragon's left side.
 export function createDragonModel() {
-  const root = new THREE.Group(); root.name = 'Drakon — model study V2';
+  const root = new THREE.Group(); root.name = 'Drakon — model study V3';
   const mat = (name,color,metalness,roughness) => {
     const m = new THREE.MeshStandardMaterial({color,metalness,roughness}); m.name=name;return m;
   };
@@ -32,8 +32,30 @@ export function createDragonModel() {
     }
     g.computeVertexNormals();return mesh(parent,g,m,name);
   }
-  function curvedPlate(parent,shape,m,name,depth=.035) {
-    return mesh(parent,new THREE.ExtrudeGeometry(shape,{depth,bevelEnabled:true,bevelSize:.012,bevelThickness:.01,bevelSegments:2,curveSegments:18,steps:1}),m,name);
+  const finMaterial=mat('Sculpted fins with gold margins',0xffffff,.32,.38);finMaterial.vertexColors=true;
+  // A single closed membrane: subdivide the silhouette, then curve both faces
+  // and taper their separation to zero at the edge. Colour is on that same
+  // surface, so there are no stacked gold and coloured slabs underneath.
+  function sculptFin(parent,shape,colour,name,{bow=.18,thickness=.075}={}) {
+    const flat=new THREE.ShapeGeometry(shape,24),boundary=shape.getPoints(32);
+    const points=Array.from({length:flat.attributes.position.count},(_,i)=>[flat.attributes.position.getX(i),flat.attributes.position.getY(i)]);
+    let faces=Array.from(flat.index.array);
+    for(let pass=0;pass<2;pass++){
+      const midpoints=new Map(),next=[];
+      function midpoint(a,b){const key=Math.min(a,b)+':'+Math.max(a,b);if(!midpoints.has(key)){midpoints.set(key,points.length);points.push([(points[a][0]+points[b][0])/2,(points[a][1]+points[b][1])/2]);}return midpoints.get(key);}
+      for(let i=0;i<faces.length;i+=3){const [a,b,c]=faces.slice(i,i+3),ab=midpoint(a,b),bc=midpoint(b,c),ca=midpoint(c,a);next.push(a,ab,ca,ab,b,bc,ca,bc,c,ab,bc,ca);}faces=next;
+    }
+    function edgeDistance(x,y){let best=Infinity;for(let i=0;i<boundary.length-1;i++){const a=boundary[i],b=boundary[i+1],dx=b.x-a.x,dy=b.y-a.y,len=dx*dx+dy*dy;const t=len?THREE.MathUtils.clamp(((x-a.x)*dx+(y-a.y)*dy)/len,0,1):0;best=Math.min(best,Math.hypot(x-a.x-t*dx,y-a.y-t*dy));}return best;}
+    const p=[],c=[],idx=[],count=points.length;
+    for(const side of [1,-1])for(const [x,y] of points){
+      const d=edgeDistance(x,y),round=THREE.MathUtils.smoothstep(d,0,.16);
+      const camber=bow*Math.sin(-x*1.7)+.10*y*y+.09*x*y;
+      p.push(x,y,camber+side*thickness*round);
+      const border=1-THREE.MathUtils.smoothstep(d,.018,.043),paint=new THREE.Color(colour).lerp(new THREE.Color(0xe2b746),border);c.push(paint.r,paint.g,paint.b);
+    }
+    for(let i=0;i<faces.length;i+=3){const [a,b,c]=faces.slice(i,i+3);idx.push(a,b,c,a+count,c+count,b+count);}
+    const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(p,3));g.setAttribute('color',new THREE.Float32BufferAttribute(c,3));g.setIndex(idx);g.computeVertexNormals();flat.dispose();
+    return mesh(parent,g,finMaterial,name);
   }
   // Centre line follows the artwork's raised neck, low chest and curling tail.
   const curve=new THREE.CatmullRomCurve3([
@@ -88,7 +110,8 @@ export function createDragonModel() {
     for(let j=0;j<=maneAcross;j++){
       const v=j/maneAcross,base=surface(u,.38*s,.005);
       const pt=base.addScaledVector(f.up,height*v).addScaledVector(f.t,-.32*v*(1-u));
-      pt.z=s*(.035+.055*Math.sin(v*Math.PI)+f.r*.38*(1-v));
+      // Teardrop section grows out of the body and closes to a fine curled crest.
+      pt.z=s*(.006+.12*Math.sin(v*Math.PI)*Math.pow(1-u,.5)+f.r*.4*(1-v))+.09*Math.sin(u*10)*v*v*(1-u);
       maneP.push(...pt.toArray());
       const c=new THREE.Color().lerpColors(new THREE.Color(0x00a7ac),new THREE.Color(0x033fb2),THREE.MathUtils.clamp(v*.85+u*.5,0,1));maneC.push(c.r,c.g,c.b);
       if(side===0&&j===maneAcross)edgeA.push(pt.toArray());
@@ -108,8 +131,7 @@ export function createDragonModel() {
   for(const [u,size] of [[.07,.68],[.37,.98],[.66,.53]]){
     const f=frame(u),fin=new THREE.Group();root.add(fin);fin.position.copy(surface(u,0,-.02));fin.rotation.z=Math.atan2(f.t.y,f.t.x);
     const shape=new THREE.Shape();shape.moveTo(.18,-.1);shape.bezierCurveTo(-.06,.24*size,-.42,.66*size,-1.1,.72*size);shape.bezierCurveTo(-.64,.55*size,-.5,.27*size,-.65,.08);shape.bezierCurveTo(-.8,.02,-1.07,-.01,-1.23,-.14);shape.bezierCurveTo(-.59,-.06,-.12,-.32,.18,-.1);shape.closePath();
-    const rim=curvedPlate(fin,shape,gold,'Curved fin gold border',.04);rim.position.z=-.02;
-    for(const side of [-1,1]){const inset=curvedPlate(fin,shape,teal,'Curved fin turquoise inlay',.009);inset.scale.set(.86,.8,side);inset.position.set(-.035,.015,side*.041);}
+    sculptFin(fin,shape,0x009fae,'Cupped dorsal fin',{bow:.2,thickness:.065});
   }
   // The broad green shoulder streamers are a defining feature of the image.
   // Their three swept points continue the silhouette below the body.
@@ -124,10 +146,8 @@ export function createDragonModel() {
     shape.bezierCurveTo(-.56,-.76,-.3,-.48,-.18,-.22);
     shape.bezierCurveTo(-.07,-.47,-.22,-.7,-.41,-.83);
     shape.bezierCurveTo(.23,-.58,.35,-.13,.12,.19);shape.closePath();
-    curvedPlate(fin,shape,gold,'Gold shoulder fin outline',.045);
-    const face=curvedPlate(fin,shape,green,'Emerald shoulder fin',.022);face.scale.set(.89,.84,1);face.position.set(-.025,-.015,.054);
-    tapered(fin,[[-.06,.11,.094],[-.39,-.03,.094],[-.68,-.33,.094],[-1.27,-.64,.094]],.026,dark,'Long shoulder fin crease');
-    tapered(fin,[[.03,.02,.094],[-.18,-.24,.094],[-.44,-.48,.094],[-.85,-.75,.094]],.021,teal,'Teal shoulder fin sweep');
+    fin.rotation.y=side*-.16;
+    sculptFin(fin,shape,0x00844d,'Curled emerald shoulder fin',{bow:.24,thickness:.085});
   }
   // Head sculpt: elongated angular cheek, tapered muzzle and separated lower jaw.
   const head=new THREE.Group();head.name='Sculpted gold head';head.position.set(2.66,1.03,0);root.add(head);
@@ -137,9 +157,9 @@ export function createDragonModel() {
     for(let i=0;i<stations.length-1;i++)for(let j=0;j<n;j++){const a=i*(n+1)+j,b=a+n+1;idx.push(a,a+1,b,b,a+1,b+1);}
     const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(p,3));g.setIndex(idx);g.computeVertexNormals();return mesh(head,g,m,name);
   }
-  loft([[-.48,.02,.045,.04],[-.3,.075,.2,.22],[-.06,.09,.235,.255],[.22,.065,.16,.205],[.44,-.015,.105,.155],[.64,-.045,.09,.13],[.77,-.08,.065,.08],[.82,-.17,.004,.004]],gold,'Tapered gold face and hooked muzzle');
-  loft([[-.08,-.2,.045,.12],[.23,-.195,.04,.158],[.5,-.17,.032,.12],[.72,-.12,.018,.055],[.77,-.13,.003,.003]],lightGold,'Swept lower jaw');
-  loft([[.12,-.14,.025,.176],[.47,-.128,.035,.142],[.72,-.115,.018,.06]],black,'Dark mouth opening');
+  loft([[-.48,.02,.045,.04],[-.3,.075,.23,.26],[-.06,.09,.27,.32],[.22,.065,.19,.27],[.44,-.015,.125,.19],[.64,-.045,.105,.16],[.77,-.08,.065,.105],[.82,-.17,.004,.004]],gold,'Sculpted forehead and hooked muzzle');
+  loft([[-.08,-.22,.05,.16],[.23,-.22,.052,.2],[.5,-.2,.044,.16],[.72,-.16,.022,.08],[.77,-.155,.003,.003]],lightGold,'Defined lower jaw');
+  loft([[.12,-.155,.035,.207],[.47,-.15,.046,.18],[.72,-.135,.022,.08]],black,'Recessed mouth opening');
   // Cheek blades, brows and luminous almond eyes on each side.
   for(const side of [-1,1]){
     // Flush cheek blades with dark separations, replacing the blocky flat cheek.
@@ -148,23 +168,31 @@ export function createDragonModel() {
       tapered(head,[[.13,y,z],[-.18,y+.045,side*.255],[-.47,y+.13,side*.25],[-.75-blade*.06,y+.22,side*.21]],.073-blade*.008,gold,'Swept gold cheek blade',.008);
       tapered(head,[[-.03,y-.04,side*.259],[-.31,y+.015,side*.269],[-.58,y+.13,side*.24]],.012,black,'Cheek blade separation');
     }
-    const socketShape=new THREE.Shape();socketShape.moveTo(-.015,.18);socketShape.quadraticCurveTo(.22,.16,.4,.075);socketShape.quadraticCurveTo(.22,.025,.08,.075);socketShape.closePath();
-    const socket=curvedPlate(head,socketShape,black,'Angular eye mask',.008);socket.position.z=side*.224;socket.scale.z=side;
-    const eyeShape=new THREE.Shape();eyeShape.moveTo(.105,.125);eyeShape.quadraticCurveTo(.24,.127,.32,.089);eyeShape.quadraticCurveTo(.2,.059,.14,.092);eyeShape.closePath();
-    const iris=curvedPlate(head,eyeShape,eye,'Narrow cyan eye',.008);iris.position.z=side*.246;iris.scale.z=side;
-    ellipsoid(head,black,[.24,.102,side*.265],[.008,.025,.003],'Vertical pupil');
-    tapered(head,[[-.03,.205,side*.22],[.16,.183,side*.251],[.4,.117,side*.177]],.032,lightGold,'Sharp sloping brow',.12);
-    ellipsoid(head,black,[.64,.007,side*.122],[.039,.016,.008],'Slit nostril').rotation.z=-.45;
-    tapered(head,[[-.16,.23,side*.125],[-.44,.38,side*.18],[-.9,.48,side*.22],[-1.34,.52,side*.21]],.09,lightGold,'Long swept crown horn');
+    // Forward-canted orbital sockets make both eyes readable head-on. These
+    // are nested curved volumes, rather than eyes pasted on parallel side planes.
+    const orbit=new THREE.Group();orbit.name='Forward-facing orbital sculpture';orbit.position.set(.18,.115,side*.245);orbit.rotation.y=side*.78;head.add(orbit);
+    ellipsoid(orbit,black,[0,0,side*.018],[.18,.078,.047],'Recessed eye socket').rotation.z=-.2;
+    ellipsoid(orbit,eye,[.025,-.002,side*.057],[.112,.035,.017],'Curved cyan eye').rotation.z=-.2;
+    ellipsoid(orbit,black,[.047,-.004,side*.075],[.009,.027,.004],'Vertical pupil');
+    tapered(orbit,[[-.19,.075,side*.025],[-.025,.071,side*.072],[.19,.022,side*.025]],.047,gold,'Sculpted angular brow',.25);
+    tapered(orbit,[[-.13,-.056,side*.018],[.02,-.067,side*.045],[.16,-.036,side*.015]],.028,gold,'Lower orbital rim',.2);
+    ellipsoid(head,gold,[.48,-.035,side*.125],[.205,.09,.105],'Flared muzzle');
+    ellipsoid(head,black,[.658,.026,side*.095],[.018,.021,.039],'Forward nostril').rotation.y=side*.35;
+    tapered(head,[[.5,.072,side*.09],[.64,.065,side*.103],[.73,.006,side*.1]],.021,lightGold,'Nostril ridge',.2);
+    tapered(head,[[-.16,.25,side*.18],[-.44,.46,side*.28],[-.94,.58,side*.42],[-1.36,.56,side*.5]],.105,lightGold,'Swept paired crown horn');
     tapered(head,[[-.25,.09,side*.22],[-.62,.17,side*.34],[-1.1,.32,side*.38]],.07,gold,'Swept side horn');
     tapered(head,[[-.24,-.05,side*.23],[-.58,-.01,side*.3],[-.95,.13,side*.32]],.046,lightGold,'Swept cheek barb');
     tapered(head,[[.67,-.11,side*.085],[.69,-.18,side*.09],[.65,-.22,side*.087]],.024,lightGold,'Hooked upper fang');
   }
-  tapered(head,[[.39,.125,0],[.06,.3,0],[-.43,.36,0],[-1.02,.36,0]],.068,lightGold,'Swept central crown');
+  tapered(head,[[.5,.105,0],[.15,.29,0],[-.28,.4,0],[-.94,.4,0]],.055,lightGold,'Central forehead keel');
+  for(const side of [-1,1]){
+    tapered(head,[[.39,.13,side*.06],[.04,.3,side*.13],[-.27,.29,side*.21]],.025,gold,'V-shaped forehead ridge',.25);
+    ellipsoid(head,teal,[-.23,-.065,side*.25],[.19,.115,.077],'Teal cheek transition');
+  }
   for(const side of [-1,1]){
     const sideMane=new THREE.Shape();sideMane.moveTo(-.24,.19);sideMane.bezierCurveTo(-.7,.4,-1.05,.34,-1.42,.1);sideMane.bezierCurveTo(-1.03,.18,-.82,-.05,-.77,-.43);sideMane.bezierCurveTo(-.63,-.2,-.44,-.02,-.24,.19);sideMane.closePath();
-    const rim=curvedPlate(head,sideMane,gold,'Head mane gold border',.018);rim.position.z=side*.115;rim.scale.z=side;
-    const inlay=curvedPlate(head,sideMane,teal,'Teal head mane',.01);inlay.position.set(-.03,.015,side*.15);inlay.scale.set(.85,.8,side);
+    const fin=new THREE.Group();head.add(fin);fin.position.z=side*.13;fin.scale.z=side;fin.rotation.y=-side*.13;
+    sculptFin(fin,sideMane,0x009bab,'Curved head mane',{bow:.14,thickness:.055});
   }
   // Four articulated-looking limbs, green muscles and three curved gold talons.
   for(const [u,front] of [[.2,true],[.57,false]])for(const side of [-1,1]) {
@@ -182,7 +210,7 @@ export function createDragonModel() {
   // Forked, gold-rimmed tail tip.
   const tail=frame(.98).p;
   for(const s of [-1,1])tapered(root,[tail.toArray(),[tail.x-.1,tail.y+.25,s*.09],[tail.x+.13,tail.y+.63,s*.14],[tail.x+.36,tail.y+.77,s*.14]],.05,lightGold,'Forked tail tip');
-  root.userData={version:2,stage:'Unrigged model for likeness review',reference:'drakon-swimmer.png',author:'Drakon Software & IT Solutions'};
+  root.userData={version:3,stage:'Unrigged model for likeness review',reference:'drakon-swimmer.png',author:'Drakon Software & IT Solutions'};
   return root;
 }
 
@@ -193,7 +221,15 @@ export function mergeDragonParts(root) {
   const merged=new THREE.Group();merged.name=root.name;merged.userData={...root.userData};
   for(const {material,parts} of batches.values()) {
     const p=[],n=[],c=[];
-    for(const part of parts){const g=(part.geometry.index?part.geometry.toNonIndexed():part.geometry.clone()).applyMatrix4(part.matrixWorld);p.push(...g.attributes.position.array);n.push(...g.attributes.normal.array);if(material.vertexColors)c.push(...g.attributes.color.array);g.dispose();}
+    for(const part of parts){
+      const g=(part.geometry.index?part.geometry.toNonIndexed():part.geometry.clone()).applyMatrix4(part.matrixWorld);
+      // Baking a mirrored limb or fin reverses triangle winding. Restore it
+      // before merging so the undersides remain outward-facing in the GLB too.
+      if(part.matrixWorld.determinant()<0)for(const attr of Object.values(g.attributes))for(let i=0;i<attr.count;i+=3)for(let j=0;j<attr.itemSize;j++){
+        const a=(i+1)*attr.itemSize+j,b=(i+2)*attr.itemSize+j,v=attr.array[a];attr.array[a]=attr.array[b];attr.array[b]=v;
+      }
+      for(const v of g.attributes.position.array)p.push(v);for(const v of g.attributes.normal.array)n.push(v);if(material.vertexColors)for(const v of g.attributes.color.array)c.push(v);g.dispose();
+    }
     const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(p,3));g.setAttribute('normal',new THREE.Float32BufferAttribute(n,3));if(c.length)g.setAttribute('color',new THREE.Float32BufferAttribute(c,3));
     const m=new THREE.Mesh(g,material);m.name=material.name;merged.add(m);
   }
