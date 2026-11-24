@@ -25,3 +25,8 @@
 .hero-brand.dragon-stage{background-color:var(--bg)}
 
 .dragon-canvas{mix-blend-mode:normal;cursor:pointer}.dragon-canvas:focus-visible{outline:1px solid var(--gold);outline-offset:-5px;border-radius:12px}
+
+/* Use the supplied long dragon artwork, without changing the header logo. */
+.dragon-stage .dragon-fallback{inset:0;width:100%;height:100%;mix-blend-mode:lighten}
+.dragon-stage .dragon-fallback img{inset:0!important;width:100%!important;height:100%!important;object-fit:contain}
+.dragon-stage .dragon-canvas{mix-blend-mode:lighten;touch-action:manipulation}
