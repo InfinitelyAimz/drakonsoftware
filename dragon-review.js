@@ -1,17 +1,17 @@
 import * as THREE from './three.module.min.js';
-import {createDragonModel,mergeDragonParts} from './dragon-model.js';
+import {createDragonModel,mergeDragonParts} from './dragon-model.js?v=2';
 const canvas=document.querySelector('canvas'),loading=document.querySelector('#loading');
 try {
- const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.2;
+ const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=.95;
  const scene=new THREE.Scene(),camera=new THREE.PerspectiveCamera(34,1,.05,80);
- scene.add(new THREE.HemisphereLight(0xdaf7ff,0x143630,2.1));
- for(const [c,i,x,y,z] of [[0xffdf9c,3.4,2,6,5],[0x4fd6eb,2,-5,3,-4],[0xf8fff5,1.6,-1,0,6]]){const l=new THREE.DirectionalLight(c,i);l.position.set(x,y,z);scene.add(l);}
- const studio=new THREE.Scene();studio.background=new THREE.Color(0x536668);
+ scene.add(new THREE.HemisphereLight(0xe5f3ff,0x102521,1.1));
+ for(const [c,i,x,y,z] of [[0xffedce,2.6,2,6,5],[0x73c9ff,1.4,-5,3,-4],[0xf8fff5,.8,-1,0,6]]){const l=new THREE.DirectionalLight(c,i);l.position.set(x,y,z);scene.add(l);}
+ const studio=new THREE.Scene();studio.background=new THREE.Color(0x283b3f);
  for(const [x,y,z,sx,sy,sz,c] of [[0,6,1,8,1,5,0xffffff],[5,1,3,1,5,4,0xffe5b4],[-5,1,-2,1,5,4,0x88dbf5]]){const m=new THREE.Mesh(new THREE.BoxGeometry(sx,sy,sz),new THREE.MeshBasicMaterial({color:c}));m.position.set(x,y,z);studio.add(m);}
- const pmrem=new THREE.PMREMGenerator(renderer),env=pmrem.fromScene(studio,.1);scene.environment=env.texture;scene.environmentIntensity=.65;pmrem.dispose();
+ const pmrem=new THREE.PMREMGenerator(renderer),env=pmrem.fromScene(studio,.1);scene.environment=env.texture;scene.environmentIntensity=.4;pmrem.dispose();
  const dragon=mergeDragonParts(createDragonModel());scene.add(dragon);
  let yaw=.35,pitch=.14,distance=14,target=new THREE.Vector3(-.2,0,0),drag=null;
- const presets={three:[.35,.14,14,[-.2,0,0],'Three-quarter view'],side:[0,0,14,[-.2,0,0],'Side view'],front:[Math.PI/2,.05,13,[0,0,0],'Front view'],back:[-Math.PI/2,.1,13,[0,0,0],'Back view'],head:[.55,.14,4.1,[2.65,1.1,0],'Head detail']};
+ const presets={three:[.35,.14,14,[-.2,0,0],'Three-quarter view'],side:[0,0,14,[-.2,0,0],'Side view'],front:[Math.PI/2,.05,9,[0,.15,0],'Front view'],back:[-Math.PI/2,.1,9,[0,.15,0],'Back view'],head:[.55,.14,5.2,[2.65,1.1,0],'Head detail']};
  function draw(){const box=canvas.getBoundingClientRect();camera.aspect=box.width/box.height;camera.updateProjectionMatrix();const responsive=box.width<650&&distance>9?1.45:1;camera.position.set(target.x+Math.sin(yaw)*Math.cos(pitch)*distance*responsive,target.y+Math.sin(pitch)*distance*responsive,target.z+Math.cos(yaw)*Math.cos(pitch)*distance*responsive);camera.lookAt(target);renderer.render(scene,camera);}
  function custom(){document.querySelectorAll('[data-view]').forEach(b=>b.setAttribute('aria-pressed','false'));document.querySelector('#view-label').textContent='Free view';}
  document.querySelectorAll('[data-view]').forEach(b=>b.addEventListener('click',()=>{const p=presets[b.dataset.view];[yaw,pitch,distance]=p;target.set(...p[3]);document.querySelector('#view-label').textContent=p[4];document.querySelectorAll('[data-view]').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));draw();}));

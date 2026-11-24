@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import {createDragonModel,mergeDragonParts} from './dragon-model.js';
 const model=mergeDragonParts(createDragonModel());
-const json={asset:{version:'2.0',generator:'Drakon model study V1'},scene:0,scenes:[{name:model.name,nodes:[0]}],nodes:[{name:model.name,children:[],extras:model.userData}],meshes:[],materials:[],bufferViews:[],accessors:[],buffers:[]};
+const json={asset:{version:'2.0',generator:'Drakon model study V'+model.userData.version},scene:0,scenes:[{name:model.name,nodes:[0]}],nodes:[{name:model.name,children:[],extras:model.userData}],meshes:[],materials:[],bufferViews:[],accessors:[],buffers:[]};
 const chunks=[];let offset=0;
 function attribute(a,type,bounds=false){
  const bytes=Buffer.from(a.array.buffer,a.array.byteOffset,a.array.byteLength),padding=(4-bytes.length%4)%4;
@@ -21,5 +21,5 @@ for(const part of model.children){
 json.buffers=[{byteLength:offset}];
 const raw=Buffer.from(JSON.stringify(json)),jsonBuf=Buffer.concat([raw,Buffer.alloc((4-raw.length%4)%4,0x20)]),bin=Buffer.concat(chunks),header=Buffer.alloc(12),jh=Buffer.alloc(8),bh=Buffer.alloc(8);
 header.writeUInt32LE(0x46546c67,0);header.writeUInt32LE(2,4);header.writeUInt32LE(28+jsonBuf.length+bin.length,8);jh.writeUInt32LE(jsonBuf.length,0);jh.writeUInt32LE(0x4e4f534a,4);bh.writeUInt32LE(bin.length,0);bh.writeUInt32LE(0x004e4942,4);
-const output=new URL('./drakon-model-v1.glb',import.meta.url);fs.writeFileSync(output,Buffer.concat([header,jh,jsonBuf,bh,bin]));
+const output=new URL('./drakon-model-v'+model.userData.version+'.glb',import.meta.url);fs.writeFileSync(output,Buffer.concat([header,jh,jsonBuf,bh,bin]));
 console.log(JSON.stringify({file:output.pathname,triangles,materials:json.materials.length,bytes:fs.statSync(output).size}));
