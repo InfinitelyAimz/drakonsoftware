@@ -28,6 +28,25 @@ Logo and business branding belong to Drakon Software & IT Solutions.
 
 ### 3D model review
 
+The current V5 review loads `drakon-model-v5.glb`, authored locally with free
+Blender 5.3.0. It includes fused skull and limb surfaces, carved nostrils,
+small teeth, a 28-bone spine, embedded textures and a gentle six-second swim.
+The interactive review autoplays; tap the dragon or press Enter/Space to pause
+and resume. Dragging rotates the view. Rendering stops offscreen or in hidden tabs.
+
+This is an early anatomy study, **not a finished film-quality asset**. The approved
+concept is shown alongside the development model to make that gap clear.
+The homepage's existing dragon animation remains the published business-site hero.
+The editable source is saved in the shared workspace as
+`model-artifacts/drakon-free-build-v5.blend`, with build scripts in `model-source/`.
+No paid generation API or subscription is used. Delivery combines matching
+materials into 13 mesh objects to reduce draw calls.
+
+`GLTFLoader.js`, `BufferGeometryUtils.js` and `SkeletonUtils.js` are locally bundled
+Three.js r187 addon files from the official repository, under `THREE-LICENSE.txt`.
+
+Earlier procedural versions:
+
 `dragon-review.html` is a separate, unlinked model review page with side, front,
 back, three-quarter, head, front-face and fin-detail views, drag rotation,
 keyboard controls and zoom.
@@ -36,7 +55,7 @@ keyboard controls and zoom.
 model is static and unrigged for likeness review before animation. It does not
 replace the homepage's existing animation.
 
-`drakon-model-v4.glb` is the current downloadable glTF 2.0 binary model;
+`drakon-model-v4.glb` is the prior static glTF 2.0 binary model;
 V1–V3 downloads retain the earlier models. Rebuild the current version with
 `node export-dragon.mjs` after editing the model source. V3 adds forward-canted
 sculpted eye sockets, a broader forehead, muzzle, nostrils and orbital rims.
