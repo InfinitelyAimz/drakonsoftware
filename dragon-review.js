@@ -1,5 +1,5 @@
 import * as THREE from './three.module.min.js';
-import {createDragonModel,mergeDragonParts} from './dragon-model.js?v=3';
+import {createDragonModel,mergeDragonParts} from './dragon-model.js?v=4';
 const canvas=document.querySelector('canvas'),loading=document.querySelector('#loading');
 try {
  const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=.95;

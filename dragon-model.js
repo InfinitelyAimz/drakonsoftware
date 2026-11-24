@@ -1,9 +1,12 @@
 import * as THREE from './three.module.min.js';
+import {createScaleTextures} from './dragon-scales.js';
 
-// Drakon V3: sculpted front face and curved, solid fins.
+// Drakon V4: scale normal, colour-detail and roughness textures.
 // X points toward the nose, Y is up, Z is the dragon's left side.
 export function createDragonModel() {
-  const root = new THREE.Group(); root.name = 'Drakon — model study V3';
+  const root = new THREE.Group(); root.name = 'Drakon — model study V4';
+  const scaleMaps=createScaleTextures(THREE);
+  function scaled(m,strength=.62){m.map=scaleMaps.albedo;m.normalMap=scaleMaps.normal;m.normalScale.set(strength,strength);m.roughnessMap=scaleMaps.roughness;m.roughness=Math.max(m.roughness,.5);return m;}
   const mat = (name,color,metalness,roughness) => {
     const m = new THREE.MeshStandardMaterial({color,metalness,roughness}); m.name=name;return m;
   };
@@ -15,6 +18,9 @@ export function createDragonModel() {
   const dark=mat('Deep green scale seams',0x002c2c,.12,.46);
   const black=mat('Mouth and eye sockets',0x031111,.1,.45);
   const eye=mat('Cyan eyes',0x42f5ed,.2,.2);eye.emissive.set(0x07c8c0);eye.emissiveIntensity=.55;
+  for(const m of [green,teal,blue,dark])scaled(m);
+  const faceGold=scaled(gold.clone(),.43);faceGold.name='Fine-scaled gold face';
+  gold.roughnessMap=scaleMaps.roughness;gold.roughness=.46;
   let serial=0;
   function mesh(parent,geo,m,name) {
     const obj=new THREE.Mesh(geo,m);obj.name=name+' '+(++serial);parent.add(obj);return obj;
@@ -32,7 +38,7 @@ export function createDragonModel() {
     }
     g.computeVertexNormals();return mesh(parent,g,m,name);
   }
-  const finMaterial=mat('Sculpted fins with gold margins',0xffffff,.32,.38);finMaterial.vertexColors=true;
+  const finMaterial=scaled(mat('Sculpted fins with gold margins',0xffffff,.32,.48),.2);finMaterial.vertexColors=true;
   // A single closed membrane: subdivide the silhouette, then curve both faces
   // and taper their separation to zero at the edge. Colour is on that same
   // surface, so there are no stacked gold and coloured slabs underneath.
@@ -54,7 +60,8 @@ export function createDragonModel() {
       const border=1-THREE.MathUtils.smoothstep(d,.018,.043),paint=new THREE.Color(colour).lerp(new THREE.Color(0xe2b746),border);c.push(paint.r,paint.g,paint.b);
     }
     for(let i=0;i<faces.length;i+=3){const [a,b,c]=faces.slice(i,i+3);idx.push(a,b,c,a+count,c+count,b+count);}
-    const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(p,3));g.setAttribute('color',new THREE.Float32BufferAttribute(c,3));g.setIndex(idx);g.computeVertexNormals();flat.dispose();
+    const uv=[];for(const side of [1,-1])for(const [x,y] of points)uv.push(x/1.6,y/1.6);
+    const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(p,3));g.setAttribute('color',new THREE.Float32BufferAttribute(c,3));g.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));g.setIndex(idx);g.computeVertexNormals();flat.dispose();
     return mesh(parent,g,finMaterial,name);
   }
   // Centre line follows the artwork's raised neck, low chest and curling tail.
@@ -70,14 +77,15 @@ export function createDragonModel() {
   }
   function surface(u,a,extra=0){const f=frame(u);return f.p.addScaledVector(f.up,(f.r+extra)*Math.cos(a)).addScaledVector(f.side,(f.r*.83+extra)*Math.sin(a));}
   // Closed sweep; vertex colours shift the dorsal surface from teal to cobalt.
-  const positions=[],colours=[],indices=[],rings=150,sides=24;
+  const positions=[],colours=[],indices=[],bodyUv=[],rings=150,sides=24;
   for(let i=0;i<=rings;i++)for(let j=0;j<=sides;j++){
     const u=i/rings,a=j/sides*Math.PI*2,p=surface(u,a);positions.push(...p.toArray());
+    bodyUv.push(j/sides,u*4.8);
     const c=new THREE.Color().lerpColors(new THREE.Color(0x00854e),new THREE.Color(0x0067a1),Math.max(0,Math.cos(a))*(.25+u*.75));colours.push(c.r,c.g,c.b);
   }
   for(let i=0;i<rings;i++)for(let j=0;j<sides;j++){const a=i*(sides+1)+j,b=a+sides+1;indices.push(a,b,a+1,b,b+1,a+1);}
-  const bodyGeo=new THREE.BufferGeometry();bodyGeo.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));bodyGeo.setAttribute('color',new THREE.Float32BufferAttribute(colours,3));bodyGeo.setIndex(indices);bodyGeo.computeVertexNormals();
-  const skin=mat('Green and blue body gradient',0xffffff,.18,.43);skin.vertexColors=true;
+  const bodyGeo=new THREE.BufferGeometry();bodyGeo.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));bodyGeo.setAttribute('color',new THREE.Float32BufferAttribute(colours,3));bodyGeo.setAttribute('uv',new THREE.Float32BufferAttribute(bodyUv,2));bodyGeo.setIndex(indices);bodyGeo.computeVertexNormals();
+  const skin=scaled(mat('Green and blue body gradient',0xffffff,.18,.5));skin.vertexColors=true;
   mesh(root,bodyGeo,skin,'Continuous serpentine body');
   // Wide belly scutes wrap under the body, rather than separate gold beads.
   function scute(u,halfLength,m,name) {
@@ -123,7 +131,7 @@ export function createDragonModel() {
   const stripSize=(maneRows+1)*(maneAcross+1);
   for(let i=0;i<maneRows;i++)for(const j of [0,maneAcross]){const a=i*(maneAcross+1)+j,b=a+maneAcross+1,c=a+stripSize,d=b+stripSize;maneI.push(a,c,b,b,c,d);}
   const maneGeo=new THREE.BufferGeometry();maneGeo.setAttribute('position',new THREE.Float32BufferAttribute(maneP,3));maneGeo.setAttribute('color',new THREE.Float32BufferAttribute(maneC,3));maneGeo.setIndex(maneI);maneGeo.computeVertexNormals();
-  const maneMat=mat('Blue to teal flowing mane',0xffffff,.2,.43);maneMat.vertexColors=true;maneMat.side=THREE.DoubleSide;
+  const maneMat=scaled(mat('Blue to teal flowing mane',0xffffff,.2,.5),.24);maneMat.vertexColors=true;maneMat.side=THREE.DoubleSide;
   mesh(root,maneGeo,maneMat,'Layered flowing mane');
   tapered(root,edgeA,.024,lightGold,'Gold dorsal edge',.2);
   for(const line of flowLines)for(const side of [0,1]){const points=line.filter(p=>p.side===side).map(({p})=>[p[0],p[1],p[2]+(side===0?.008:-.008)]);tapered(root,points,.014,dark,'Sweeping mane seam',.2);}
@@ -152,12 +160,12 @@ export function createDragonModel() {
   // Head sculpt: elongated angular cheek, tapered muzzle and separated lower jaw.
   const head=new THREE.Group();head.name='Sculpted gold head';head.position.set(2.66,1.03,0);root.add(head);
   function loft(stations,m,name) {
-    const p=[],idx=[],n=16;
-    for(const [x,y,ry,rz] of stations)for(let j=0;j<=n;j++){const a=j/n*Math.PI*2;p.push(x,y+Math.cos(a)*ry,Math.sin(a)*rz);}
+    const p=[],idx=[],uv=[],n=16;
+    for(const [x,y,ry,rz] of stations)for(let j=0;j<=n;j++){const a=j/n*Math.PI*2;p.push(x,y+Math.cos(a)*ry,Math.sin(a)*rz);uv.push(j/n,x/1.6);}
     for(let i=0;i<stations.length-1;i++)for(let j=0;j<n;j++){const a=i*(n+1)+j,b=a+n+1;idx.push(a,a+1,b,b,a+1,b+1);}
-    const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(p,3));g.setIndex(idx);g.computeVertexNormals();return mesh(head,g,m,name);
+    const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(p,3));g.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));g.setIndex(idx);g.computeVertexNormals();return mesh(head,g,m,name);
   }
-  loft([[-.48,.02,.045,.04],[-.3,.075,.23,.26],[-.06,.09,.27,.32],[.22,.065,.19,.27],[.44,-.015,.125,.19],[.64,-.045,.105,.16],[.77,-.08,.065,.105],[.82,-.17,.004,.004]],gold,'Sculpted forehead and hooked muzzle');
+  loft([[-.48,.02,.045,.04],[-.3,.075,.23,.26],[-.06,.09,.27,.32],[.22,.065,.19,.27],[.44,-.015,.125,.19],[.64,-.045,.105,.16],[.77,-.08,.065,.105],[.82,-.17,.004,.004]],faceGold,'Sculpted forehead and hooked muzzle');
   loft([[-.08,-.22,.05,.16],[.23,-.22,.052,.2],[.5,-.2,.044,.16],[.72,-.16,.022,.08],[.77,-.155,.003,.003]],lightGold,'Defined lower jaw');
   loft([[.12,-.155,.035,.207],[.47,-.15,.046,.18],[.72,-.135,.022,.08]],black,'Recessed mouth opening');
   // Cheek blades, brows and luminous almond eyes on each side.
@@ -210,7 +218,7 @@ export function createDragonModel() {
   // Forked, gold-rimmed tail tip.
   const tail=frame(.98).p;
   for(const s of [-1,1])tapered(root,[tail.toArray(),[tail.x-.1,tail.y+.25,s*.09],[tail.x+.13,tail.y+.63,s*.14],[tail.x+.36,tail.y+.77,s*.14]],.05,lightGold,'Forked tail tip');
-  root.userData={version:3,stage:'Unrigged model for likeness review',reference:'drakon-swimmer.png',author:'Drakon Software & IT Solutions'};
+  root.userData={version:4,stage:'Unrigged textured model for likeness review',reference:'drakon-swimmer.png',author:'Drakon Software & IT Solutions'};
   return root;
 }
 
@@ -220,17 +228,37 @@ export function mergeDragonParts(root) {
   root.traverse(o=>{if(!o.isMesh)return;const key=o.material.uuid;if(!batches.has(key))batches.set(key,{material:o.material,parts:[]});batches.get(key).parts.push(o);});
   const merged=new THREE.Group();merged.name=root.name;merged.userData={...root.userData};
   for(const {material,parts} of batches.values()) {
-    const p=[],n=[],c=[];
+    const p=[],n=[],c=[],uv=[];
     for(const part of parts){
       const g=(part.geometry.index?part.geometry.toNonIndexed():part.geometry.clone()).applyMatrix4(part.matrixWorld);
+      // Preserve authored body/head UVs; project the remaining small surfaces
+      // in physical units so the texture also follows limbs, armour and fins.
+      const authored=part.name.startsWith('Continuous serpentine body')||part.name.startsWith('Sculpted forehead')||part.material.name==='Sculpted fins with gold margins';
+      let mapping=g.attributes.uv;
+      if(!authored){
+        const a=[];
+        for(let i=0;i<g.attributes.position.count;i+=3){
+          const normal=new THREE.Vector3();for(let j=0;j<3;j++)normal.add(new THREE.Vector3().fromBufferAttribute(g.attributes.normal,i+j));normal.normalize();
+          const axis=Math.abs(normal.z)>=Math.abs(normal.x)&&Math.abs(normal.z)>=Math.abs(normal.y)?2:Math.abs(normal.y)>=Math.abs(normal.x)?1:0;
+          for(let j=0;j<3;j++){const v=new THREE.Vector3().fromBufferAttribute(g.attributes.position,i+j);a.push((axis===0?v.z:v.x)/1.6,(axis===1?v.z:v.y)/1.6);}
+        }
+        mapping=new THREE.Float32BufferAttribute(a,2);g.setAttribute('uv',mapping);
+      }
       // Baking a mirrored limb or fin reverses triangle winding. Restore it
       // before merging so the undersides remain outward-facing in the GLB too.
       if(part.matrixWorld.determinant()<0)for(const attr of Object.values(g.attributes))for(let i=0;i<attr.count;i+=3)for(let j=0;j<attr.itemSize;j++){
         const a=(i+1)*attr.itemSize+j,b=(i+2)*attr.itemSize+j,v=attr.array[a];attr.array[a]=attr.array[b];attr.array[b]=v;
       }
-      for(const v of g.attributes.position.array)p.push(v);for(const v of g.attributes.normal.array)n.push(v);if(material.vertexColors)for(const v of g.attributes.color.array)c.push(v);g.dispose();
+      for(const v of g.attributes.position.array)p.push(v);for(const v of g.attributes.normal.array)n.push(v);for(const v of mapping.array)uv.push(v);if(material.vertexColors)for(const v of g.attributes.color.array)c.push(v);g.dispose();
     }
-    const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(p,3));g.setAttribute('normal',new THREE.Float32BufferAttribute(n,3));if(c.length)g.setAttribute('color',new THREE.Float32BufferAttribute(c,3));
+    const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(p,3));g.setAttribute('normal',new THREE.Float32BufferAttribute(n,3));g.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));if(c.length)g.setAttribute('color',new THREE.Float32BufferAttribute(c,3));
+    if(material.normalMap){
+      g.setIndex(Array.from({length:g.attributes.position.count},(_,i)=>i));g.computeTangents();
+      const a=g.attributes.tangent;
+      for(let i=0;i<a.count;i++)if(Math.hypot(a.getX(i),a.getY(i),a.getZ(i))<.5){
+        const normal=new THREE.Vector3().fromBufferAttribute(g.attributes.normal,i),axis=Math.abs(normal.y)<.9?new THREE.Vector3(0,1,0):new THREE.Vector3(1,0,0),t=axis.cross(normal).normalize();a.setXYZW(i,t.x,t.y,t.z,1);
+      }
+    }
     const m=new THREE.Mesh(g,material);m.name=material.name;merged.add(m);
   }
   return merged;
