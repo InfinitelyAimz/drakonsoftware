@@ -2,6 +2,23 @@
 
 Business website for Drakon Software & IT Solutions.
 
+## Current dragon anatomy draft — V6
+
+`dragon-review.html` displays `drakon-model-v6.glb`: a new, locally authored
+Blender anatomy draft with real geometry, 3,892 individual body scales,
+curved thin membranes and a 63-bone skeleton for the head, jaw, spine, limbs
+and fins. The browser asset contains 13 material meshes with embedded PBR
+textures. It passes Khronos glTF validation with no errors or warnings.
+The jaw and spine deformation checks pass and all vertices have normalized
+skin weights. The editable Blender file is retained with the local modelling
+project.
+
+This is an early anatomy draft, not the finished realistic character in the
+approved concept. Facial sculpting, scale variation and organic fin detail
+still need work. Flight animation has not been authored for V6. Review controls
+rotate and zoom the static model; its download retains the articulation rig.
+The business homepage and its existing dragon animation are unchanged.
+
 ## Website files
 
 - `index.html`: page content and enquiry form
