@@ -22,7 +22,7 @@ const emailEndpoint = form.dataset.emailEndpoint || '';
 const emailReady = /^https:\/\/formspree\.io\/f\/[a-z0-9]+$/i.test(emailEndpoint);
 if (emailReady) {
   submitButton.textContent = 'Send email request';
-  form.querySelector('.form-note').textContent = 'Email sends your request directly through Formspree. WhatsApp opens a message for you to review and send. Please don’t include passwords or sensitive information.';
+  form.querySelector('.form-note').textContent = 'Fill in this form to send an email request. Prefer WhatsApp? Open a chat directly—no form needed. Please don’t include passwords or sensitive information.';
 }
 document.querySelectorAll('[data-service]').forEach(link => link.addEventListener('click', () => {
   form.elements.service.value = link.dataset.service;

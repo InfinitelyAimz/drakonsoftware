@@ -60,3 +60,6 @@
 .enquiry-actions{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
 .enquiry-actions .button{width:100%;margin:0;padding-inline:12px}
 @media(max-width:450px){.enquiry-actions{grid-template-columns:1fr}}
+
+.contact-links .contact-action{display:inline;color:var(--gold);font:inherit;letter-spacing:normal;margin:0;text-decoration-line:underline;text-decoration-style:dotted;text-decoration-thickness:1px;text-underline-offset:6px}
+.contact-links a:hover .contact-action,.contact-links a:focus-visible .contact-action{text-decoration-style:solid;color:#f4d788}
