@@ -7,6 +7,13 @@ if (video && control) {
   video.defaultMuted = true;
   video.autoplay = true;
   video.playsInline = true;
+  video.controls = false;
+  video.disablePictureInPicture = true;
+  video.disableRemotePlayback = true;
+  // Limit casual media shortcuts only on the dragon, not the rest of the page.
+  const stage = video.closest('.dragon-video-stage');
+  stage.addEventListener('contextmenu', event => event.preventDefault());
+  stage.addEventListener('dragstart', event => event.preventDefault());
   function updateControl() {
     control.setAttribute('aria-label', video.paused ? 'Play dragon animation' : 'Pause dragon animation');
     control.setAttribute('aria-pressed', String(userPaused));

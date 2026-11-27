@@ -52,3 +52,7 @@
 .ticker-group a:hover,.ticker-group a:focus-visible{color:var(--gold);text-decoration:underline}
 .services-ticker:has(a:focus-visible) .ticker-track{animation-play-state:paused}
 .service[id],#software-maintenance{scroll-margin-top:100px}
+
+.dragon-video{pointer-events:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+.dragon-video-control{user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+.dragon-video::-webkit-media-controls{display:none!important}
