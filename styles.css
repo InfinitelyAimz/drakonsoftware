@@ -56,3 +56,7 @@
 .dragon-video{pointer-events:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
 .dragon-video-control{user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
 .dragon-video::-webkit-media-controls{display:none!important}
+
+.enquiry-actions{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+.enquiry-actions .button{width:100%;margin:0;padding-inline:12px}
+@media(max-width:450px){.enquiry-actions{grid-template-columns:1fr}}
