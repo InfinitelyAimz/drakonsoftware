@@ -108,3 +108,23 @@ form.addEventListener('submit', async event => {
   status.append(retry, document.createTextNode('. Your enquiry has not been sent automatically.'));
 });
 document.querySelector('#year').textContent = new Date().getFullYear();
+
+// Keep the services moving at a steady reading speed, with an explicit pause.
+const servicesTicker = document.querySelector('.services-ticker');
+const tickerToggle = document.querySelector('.ticker-toggle');
+if (servicesTicker && tickerToggle) {
+  const sizeTicker = () => {
+    const width = servicesTicker.clientWidth;
+    const minimum = window.innerWidth <= 700 ? 600 : 650;
+    servicesTicker.style.setProperty('--ticker-width', `${width}px`);
+    servicesTicker.style.setProperty('--ticker-duration', `${Math.max(width, minimum) / 32}s`);
+  };
+  new ResizeObserver(sizeTicker).observe(servicesTicker);
+  sizeTicker();
+  tickerToggle.addEventListener('click', () => {
+    const paused = servicesTicker.classList.toggle('is-paused');
+    tickerToggle.setAttribute('aria-pressed', String(paused));
+    tickerToggle.setAttribute('aria-label', paused ? 'Resume services scrolling' : 'Pause services scrolling');
+    tickerToggle.querySelector('span').textContent = paused ? '▶' : 'Ⅱ';
+  });
+}
