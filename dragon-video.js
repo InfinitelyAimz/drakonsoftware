@@ -1,10 +1,12 @@
 const video = document.querySelector('.dragon-video');
 const control = document.querySelector('.dragon-video-control');
 if (video && control) {
-  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
-  let userPaused = reducedMotion.matches;
+  let userPaused = false;
   let inView = true;
   video.muted = true;
+  video.defaultMuted = true;
+  video.autoplay = true;
+  video.playsInline = true;
   function updateControl() {
     control.setAttribute('aria-label', video.paused ? 'Play dragon animation' : 'Pause dragon animation');
     control.setAttribute('aria-pressed', String(userPaused));
@@ -21,7 +23,9 @@ if (video && control) {
   video.addEventListener('play', updateControl);
   video.addEventListener('pause', updateControl);
   document.addEventListener('visibilitychange', sync);
-  reducedMotion.addEventListener('change', event => { userPaused = event.matches; sync(); });
+  video.addEventListener('loadeddata', sync);
+  video.addEventListener('canplay', sync);
+  window.addEventListener('pageshow', sync);
   if ('IntersectionObserver' in window) {
     new IntersectionObserver(entries => { inView = entries[0].isIntersecting; sync(); }, {threshold: .05}).observe(video);
   }

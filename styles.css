@@ -33,7 +33,7 @@
 
 /* Cinematic dragon video; the whole image is the pause/play target. */
 .hero-brand.dragon-video-stage{aspect-ratio:4/3;background:var(--bg);border:0;max-width:540px;align-self:center}
-.dragon-video{display:block;width:100%;height:100%;object-fit:contain}
+.dragon-video{display:block;position:absolute;left:0;top:50%;transform:translateY(-50%);width:100%;height:auto;aspect-ratio:2/1;object-fit:contain;mask-image:linear-gradient(to bottom,transparent,#000 4%,#000 96%,transparent),linear-gradient(to right,transparent,#000 1.5%,#000 98.5%,transparent);mask-composite:intersect;-webkit-mask-image:linear-gradient(to bottom,transparent,#000 4%,#000 96%,transparent),linear-gradient(to right,transparent,#000 1.5%,#000 98.5%,transparent);-webkit-mask-composite:source-in}
 .dragon-video-control{position:absolute;inset:0;width:100%;height:100%;border:0;background:transparent;cursor:pointer;touch-action:manipulation;border-radius:12px}
 .dragon-video-control:focus-visible{outline:2px solid var(--gold);outline-offset:-5px}
 @media(max-width:700px){.hero-brand.dragon-video-stage{max-width:100%}}
